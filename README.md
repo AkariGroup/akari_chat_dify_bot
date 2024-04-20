@@ -24,7 +24,12 @@
 1. API keyとBase URLを`config/dify_config.json` に入力する。  
 
 
-### 起動方法
+### Difyサンプルの起動方法
+キーボード入力した文章に対してDifyアプリ上で返答を作成  
+`python3 dify_example.py`  
+
+
+### 音声対話botの起動方法
 
 1. [akari_chatgpt_botのREADME](https://github.com/AkariGroup/akari_chatgpt_bot/blob/main/README.md)内 **遅延なし音声対話botの実行** の起動方法1., 3.を実行する。  
 

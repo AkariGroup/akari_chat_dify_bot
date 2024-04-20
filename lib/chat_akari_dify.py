@@ -12,8 +12,21 @@ class ChatStreamAkariDify(object):
     Difyを使用して会話を行うためのクラス。
     """
 
-    def __init__(self, api_key: str, base_url: str) -> None:
-        """クラスの初期化メソッド。"""
+    def __init__(
+        self,
+        api_key: str,
+        base_url: str,
+        motion_host: str = "127.0.0.1",
+        motion_port: str = "50055",
+    ) -> None:
+        """クラスの初期化メソッド。
+
+        Args:
+            api_key (str): 使用するDifyのアプリのAPI key。
+            base_url (str): 使用するDifyのアプリのBase URL。
+            motion_host (str, optional): モーションサーバーのホスト名。デフォルトは"127.0.0.1"。
+            motion_port (str, optional): モーションサーバーのポート番号。デフォルトは"50055"。
+        """
 
         self.last_char = ["、", "。", "！", "!", "?", "？", "\n", "}"]
         self.api_key = api_key
@@ -21,6 +34,15 @@ class ChatStreamAkariDify(object):
         self.chat_client = ChatClient(self.api_key, self.base_url)
 
     def chat(self, query: str) -> Generator[str, None, None]:
+        """Difyを使用して会話を行う。
+
+        Args:
+            query (str): 会話のquery入力。現在はquery textの入力のみサポート。
+
+        Returns:
+            Generator[str, None, None]): 返答を順次生成する。現状はtext出力のみサポート。
+
+        """
         # Create Chat Message using ChatClient
         chat_response = self.chat_client.create_chat_message(
             inputs={}, query=query, user="user_id", response_mode="streaming"
@@ -32,7 +54,7 @@ class ChatStreamAkariDify(object):
             line = line.split("data:", 1)[-1]
             if line.strip():
                 line = json.loads(line.strip())
-                ans = line.get('answer')
+                ans = line.get("answer")
                 if ans is not None:
                     full_response += ans
                     real_time_response += ans
@@ -47,3 +69,26 @@ class ChatStreamAkariDify(object):
                         else:
                             pass
         yield real_time_response
+
+    def send_reserved_motion(self) -> bool:
+        """予約されたモーションを送信するメソッド。
+
+        Returns:
+            bool: モーションが送信されたかどうかを示すブール値。
+
+        """
+        print(f"send motion {self.cur_motion_name}")
+        if self.cur_motion_name == "":
+            self.motion_stub.ClearMotion(motion_server_pb2.ClearMotionRequest())
+            return False
+        try:
+            self.motion_stub.SetMotion(
+                motion_server_pb2.SetMotionRequest(
+                    name=self.cur_motion_name, priority=3, repeat=False, clear=True
+                )
+            )
+            self.cur_motion_name = ""
+        except BaseException:
+            print("setMotion error!")
+            return False
+        return True

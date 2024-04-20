@@ -1,5 +1,4 @@
 import argparse
-import copy
 import os
 import sys
 import json
@@ -14,47 +13,52 @@ import gpt_server_pb2_grpc
 import voicevox_server_pb2
 import voicevox_server_pb2_grpc
 
-DIFY_CONFIG_PATH = f"{os.path.dirname(os.path.realpath(__file__))}/config/dify_config.json"
+DIFY_CONFIG_PATH = (
+    f"{os.path.dirname(os.path.realpath(__file__))}/config/dify_config.json"
+)
+
 
 class DifyServer(gpt_server_pb2_grpc.GptServerServiceServicer):
     """
     Difyにtextを送信し、返答をvoicevox_serverに送るgprcサーバ
     """
 
-    def __init__(self,api_key: str, base_url: str) -> None:
+    def __init__(self, api_key: str, base_url: str) -> None:
         self.chat_stream_akari_dify = ChatStreamAkariDify(api_key, base_url)
         voicevox_channel = grpc.insecure_channel("localhost:10002")
         self.stub = voicevox_server_pb2_grpc.VoicevoxServerServiceStub(voicevox_channel)
 
-    def SetDify(
+    def SetGpt(
         self, request: gpt_server_pb2.SetGptRequest(), context: grpc.ServicerContext
     ) -> gpt_server_pb2.SetGptReply:
-        for sentence in chat_stream_akri_dify.chat(request.text):
+        for sentence in self.chat_stream_akri_dify.chat(request.text):
             print(f"Send voicevox: {sentence}")
-            self.stub.SetVoicevox(
-                voicevox_server_pb2.SetVoicevoxRequest(text=sentence)
-            )
+            self.stub.SetVoicevox(voicevox_server_pb2.SetVoicevoxRequest(text=sentence))
         print("")
         return gpt_server_pb2.SetGptReply(success=True)
 
-
+    def SendMotion(
+        self, request: gpt_server_pb2.SendMotionRequest(), context: grpc.ServicerContext
+    ) -> gpt_server_pb2.SendMotionReply:
+        success = self.chat_stream_akari_grpc.send_reserved_motion()
+        return gpt_server_pb2.SendMotionReply(success=success)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--ip", help="Gpt server ip address", default="127.0.0.1", type=str
+        "--ip", help="Dify server ip address", default="127.0.0.1", type=str
     )
     parser.add_argument(
-        "--port", help="Gpt server port number", default="10001", type=str
+        "--port", help="Dify server port number", default="10001", type=str
     )
     args = parser.parse_args()
 
     if not os.path.isfile(DIFY_CONFIG_PATH):
-            print(f"Dify setting file path is not available.")
-            return
-    api_key:str = ""
-    base_url:str = ""
+        print(f"Dify setting file path is not available.")
+        return
+    api_key: str = ""
+    base_url: str = ""
     with open(DIFY_CONFIG_PATH, "r") as dify_json:
         dify_config = json.load(dify_json)
         if "api_key" in dify_config:
@@ -76,7 +80,9 @@ def main() -> None:
             print(f"base_url not found in config/dify_config.json")
             return
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    gpt_server_pb2_grpc.add_GptServerServiceServicer_to_server(DifyServer(api_key=api_key, base_url=base_url), server)
+    gpt_server_pb2_grpc.add_GptServerServiceServicer_to_server(
+        DifyServer(api_key=api_key, base_url=base_url), server
+    )
     server.add_insecure_port(args.ip + ":" + args.port)
     server.start()
     print(f"dify_publisher start. port: {args.port}")

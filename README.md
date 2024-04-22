@@ -42,7 +42,8 @@
    - `--port`: dify_serverのポート。デフォルトは"10001"  
 
 3. speech_publisher.pyを起動する。(Google音声認識の結果をgpt_publisherへ渡す。)  
-   `python3 speech_publisher.py`  
+   **--progress_leport_lenを0に設定すること**  
+   `python3 speech_publisher.py --progress_leport_len 0`  
 
    引数は下記が使用可能  
    - `--robot_ip`: akari_motion_serverのIPアドレス。デフォルトは"127.0.0.1"
@@ -52,11 +53,12 @@
    - `--voicevox_ip`: voicevox_serverのIPアドレス。デフォルトは"127.0.0.1"
    - `--voicevox_port`: voicevox_serverのポート。デフォルトは"10002"
    - `-t`,`--timeout`: マイク入力がこの時間しきい値以下になったら音声入力を打ち切る。デフォルトは0.5[s]。短いと応答が早くなるが不安定になりやすい。  
-   - `-p`,`--power_threshold`: マイク入力の音量しきい値。デフォルトは0で、0の場合アプリ起動時に周辺環境の音量を取得し、そこから音量しきい値を自動決定する。  
-   - `--no_motion`: このオプションをつけた場合、音声入力中のうなずき動作を無効化する。  
+   - `-p`,`--power_threshold`: マイク入力の音量しきい値。デフォルトは0で、0の場合アプリ起動時に周辺環境の音量を取得し、そこから音量しきい値を自動決定する。
+   - `--progress_report_len`: 音声認識の文字数がここで入力した数値以上になると、一旦gpt_publisherに認識結果を送り、第一声とモーションを生成する(遅延なし応答用)。0にすると無効。  
+   **デフォルトは8だが、今回は0に設定しないとdifyに二重でリクエストが送信されてしまうので注意。**
+- `--no_motion`: このオプションをつけた場合、音声入力中のうなずき動作を無効化する。  
 
-
-4. カメラの画像表示をするウィンドウが起動したら、`speech_publisher.py`のターミナルでEnterキーを押し、マイクに話しかけるとDifyのアプリに基づいた返答が返ってくる。  
+1. カメラの画像表示をするウィンドウが起動したら、`speech_publisher.py`のターミナルでEnterキーを押し、マイクに話しかけるとDifyのアプリに基づいた返答が返ってくる。  
 
 ### スクリプトで一括起動する方法
 

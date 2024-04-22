@@ -1,3 +1,4 @@
+import grpc
 import json
 import os
 import sys
@@ -6,6 +7,9 @@ from typing import Generator, List, Union
 from gpt_stream_parser import force_parse_json
 from .dify_client.client import ChatClient
 
+sys.path.append(os.path.join(os.path.dirname(__file__), "grpc"))
+import motion_server_pb2
+import motion_server_pb2_grpc
 
 class ChatStreamAkariDify(object):
     """
@@ -32,6 +36,11 @@ class ChatStreamAkariDify(object):
         self.api_key = api_key
         self.base_url = base_url
         self.chat_client = ChatClient(self.api_key, self.base_url)
+        motion_channel = grpc.insecure_channel(motion_host + ":" + motion_port)
+        self.motion_stub = motion_server_pb2_grpc.MotionServerServiceStub(
+            motion_channel
+        )
+        self.cur_motion_name = ""
 
     def chat(self, query: str) -> Generator[str, None, None]:
         """Difyを使用して会話を行う。
@@ -79,7 +88,10 @@ class ChatStreamAkariDify(object):
         """
         print(f"send motion {self.cur_motion_name}")
         if self.cur_motion_name == "":
-            self.motion_stub.ClearMotion(motion_server_pb2.ClearMotionRequest())
+            try:
+                self.motion_stub.ClearMotion(motion_server_pb2.ClearMotionRequest())
+            except BaseException:
+                print("Failed to send to motion server")
             return False
         try:
             self.motion_stub.SetMotion(

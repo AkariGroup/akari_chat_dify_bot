@@ -31,7 +31,7 @@ class DifyServer(gpt_server_pb2_grpc.GptServerServiceServicer):
     def SetGpt(
         self, request: gpt_server_pb2.SetGptRequest(), context: grpc.ServicerContext
     ) -> gpt_server_pb2.SetGptReply:
-        for sentence in self.chat_stream_akri_dify.chat(request.text):
+        for sentence in self.chat_stream_akari_dify.chat(request.text):
             print(f"Send voicevox: {sentence}")
             self.stub.SetVoicevox(voicevox_server_pb2.SetVoicevoxRequest(text=sentence))
         print("")
@@ -40,7 +40,7 @@ class DifyServer(gpt_server_pb2_grpc.GptServerServiceServicer):
     def SendMotion(
         self, request: gpt_server_pb2.SendMotionRequest(), context: grpc.ServicerContext
     ) -> gpt_server_pb2.SendMotionReply:
-        success = self.chat_stream_akari_grpc.send_reserved_motion()
+        success = self.chat_stream_akari_dify.send_reserved_motion()
         return gpt_server_pb2.SendMotionReply(success=success)
 
 

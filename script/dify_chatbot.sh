@@ -16,5 +16,5 @@ cd ../
 
  gnome-terminal --title="voicevox_server" -- bash -ic "python3 akari_chatgpt_bot/voicevox_server.py --voicevox_local --voicevox_host ${ip}"
  gnome-terminal --title="dify_publisher" -- bash -ic "python3 dify_publisher.py"
- gnome-terminal --title="speech_publisher" -- bash -ic "python3 akari_chatgpt_bot/speech_publisher.py --timeout 0.8"
+ gnome-terminal --title="speech_publisher" -- bash -ic "python3 akari_chatgpt_bot/speech_publisher.py --timeout 0.8 --progress_report_len 0"
 )

@@ -1,3 +1,3 @@
 [submodule "akari_chatgpt_bot"]
 	path = akari_chatgpt_bot
-	url = git@github.com:AkariGroup/akari_chatgpt_bot.git
+	url = https://github.com/AkariGroup/akari_chatgpt_bot.git

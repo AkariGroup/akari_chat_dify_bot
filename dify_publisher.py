@@ -10,8 +10,8 @@ from lib.chat_akari_dify import ChatStreamAkariDify
 sys.path.append(os.path.join(os.path.dirname(__file__), "akari_chatgpt_bot/lib/grpc"))
 import gpt_server_pb2
 import gpt_server_pb2_grpc
-import voicevox_server_pb2
-import voicevox_server_pb2_grpc
+import voice_server_pb2
+import voice_server_pb2_grpc
 
 DIFY_CONFIG_PATH = (
     f"{os.path.dirname(os.path.realpath(__file__))}/config/dify_config.json"
@@ -20,20 +20,20 @@ DIFY_CONFIG_PATH = (
 
 class DifyServer(gpt_server_pb2_grpc.GptServerServiceServicer):
     """
-    Difyにtextを送信し、返答をvoicevox_serverに送るgprcサーバ
+    Difyにtextを送信し、返答をvoice_serverに送るgprcサーバ
     """
 
     def __init__(self, api_key: str, base_url: str) -> None:
         self.chat_stream_akari_dify = ChatStreamAkariDify(api_key, base_url)
-        voicevox_channel = grpc.insecure_channel("localhost:10002")
-        self.stub = voicevox_server_pb2_grpc.VoicevoxServerServiceStub(voicevox_channel)
+        voice_channel = grpc.insecure_channel("localhost:10002")
+        self.stub = voice_server_pb2_grpc.VoiceServerServiceStub(voice_channel)
 
     def SetGpt(
         self, request: gpt_server_pb2.SetGptRequest(), context: grpc.ServicerContext
     ) -> gpt_server_pb2.SetGptReply:
         for sentence in self.chat_stream_akari_dify.chat(request.text):
-            print(f"Send voicevox: {sentence}")
-            self.stub.SetVoicevox(voicevox_server_pb2.SetVoicevoxRequest(text=sentence))
+            print(f"Send voice: {sentence}")
+            self.stub.SetText(voice_server_pb2.SetTextRequest(text=sentence))
         print("")
         return gpt_server_pb2.SetGptReply(success=True)
 

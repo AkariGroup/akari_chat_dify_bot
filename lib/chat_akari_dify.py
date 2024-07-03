@@ -73,11 +73,13 @@ class ChatStreamAkariDify(object):
                             sentence = real_time_response[:pos]  # 1文の区切り
                             real_time_response = real_time_response[pos:]  # 残りの部分
                             # 1文完成ごとにテキストを読み上げる(遅延時間短縮のため)
-                            yield sentence
+                            if sentence != "":
+                                yield sentence
                             break
                         else:
                             pass
-        yield real_time_response
+        if real_time_response != "":
+            yield real_time_response
 
     def send_reserved_motion(self) -> bool:
         """予約されたモーションを送信するメソッド。
